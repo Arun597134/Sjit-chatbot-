@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Fees Structure Requests - SJIT Staff</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #000;
+      color: #fff;
+    }
+
+    #particles-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+
+    .container {
+      padding: 30px;
+      max-width: 900px;
+      margin: auto;
+    }
+
+    h1 {
+      text-align: center;
+      margin-bottom: 40px;
+      color: #d97706;
+    }
+
+    .request {
+      background: #111;
+      border: 1px solid #d9770688;
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px #d9770633;
+    }
+
+    .request p {
+      margin: 5px 0;
+      line-height: 1.6;
+    }
+
+    .approve-btn {
+      margin-top: 10px;
+      background-color: #fbbf24;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .approve-btn:hover {
+      background-color: #f59e0b;
+    }
+
+    .no-requests {
+      text-align: center;
+      margin-top: 100px;
+      font-size: 1.2rem;
+      color: #bbb;
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-bg"></div>
+  <div class="container">
+    <h1>Pending Fees Receipt Requests</h1>
+    <div id="requests-container"></div>
+  </div>
+
+  <script>
+    // Vanta Golden Background
+    VANTA.NET({
+      el: "#particles-bg",
+      mouseControls: true,
+      touchControls: true,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.0,
+      scaleMobile: 1.0,
+      color: 0xd97706,
+      backgroundColor: 0x000000,
+      points: 12.0,
+      maxDistance: 20.0,
+      spacing: 15.0
+    });
+
+    const container = document.getElementById('requests-container');
+    let pendingRequests = [];
+
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("fees_")) {
+        const data = JSON.parse(localStorage.getItem(key));
+        if (data.source === "fees.html" && !data.approved) {
+          pendingRequests.push(data);
+        }
+      }
+    }
+
+    if (pendingRequests.length === 0) {
+      container.innerHTML = `<div class="no-requests">No pending requests found.</div>`;
+    } else {
+      pendingRequests.forEach((req) => {
+        const div = document.createElement('div');
+        div.className = 'request';
+        div.innerHTML = `
+          <p><strong>Name:</strong> ${req.name}</p>
+          <p><strong>Roll No:</strong> ${req.roll}</p>
+          <p><strong>Department:</strong> ${req.dept}</p>
+          <p><strong>Year:</strong> ${req.year}</p>
+          <p><strong>Total Fees:</strong> ${req.totalFees}</p>
+          <button class="approve-btn" onclick="approveRequest('${req.roll}')">Approve</button>
+        `;
+        container.appendChild(div);
+      });
+    }
+
+    function approveRequest(roll) {
+      const key = `fees_${roll}`;
+      const data = JSON.parse(localStorage.getItem(key));
+
+      if (data) {
+        data.approved = true;
+        localStorage.setItem(key, JSON.stringify(data));
+        alert(`Approved request for ${data.name} (${data.roll})`);
+        location.reload();
+      } else {
+        alert("Request not found.");
+      }
+    }
+  </script>
+</body>
+</html>
