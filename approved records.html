@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Staff Approval Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #000;
+      color: #fff;
+    }
+    #particles-bg {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    .container {
+      padding: 30px;
+      max-width: 1000px;
+      margin: auto;
+    }
+    h1 {
+      text-align: center;
+      color: #fbbf24;
+    }
+    .section-title {
+      margin-top: 40px;
+      font-size: 1.4rem;
+      border-bottom: 2px solid #fbbf24;
+      padding-bottom: 6px;
+      color: #fbbf24;
+    }
+    .request {
+      background: #111;
+      border: 1px solid #fbbf2480;
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      box-shadow: 0 0 15px #fbbf2422;
+    }
+    .request p {
+      margin: 5px 0;
+    }
+    .approve-btn, .download-btn {
+      margin-top: 10px;
+      background-color: #fbbf24;
+      color: #000;
+      padding: 10px 20px;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    .approve-btn:hover, .download-btn:hover {
+      background-color: #f59e0b;
+    }
+    #filter-date {
+      padding: 8px;
+      margin-top: 15px;
+      border-radius: 6px;
+      font-size: 1rem;
+      border: none;
+    }
+    .no-requests {
+      color: #ccc;
+      text-align: center;
+      margin-top: 30px;
+    }
+  </style>
+</head>
+<body>
+  <div id="particles-bg"></div>
+  <div class="container">
+    <h1>Staff Approval Dashboard</h1>
+
+    <div class="section-title">Pending Requests</div>
+    <div id="requests-container"></div>
+
+    <div class="section-title">Approved Records</div>
+    <input type="date" id="filter-date" onchange="filterByDate()">
+    <button class="download-btn" onclick="downloadPDF()">Download as PDF</button>
+    <div id="approved-container"></div>
+  </div>
+
+  <script>
+    VANTA.NET({
+      el: "#particles-bg",
+      mouseControls: true,
+      touchControls: true,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0xfbbf24,
+      backgroundColor: 0x000000
+    });
+
+    const pendingContainer = document.getElementById("requests-container");
+    const approvedContainer = document.getElementById("approved-container");
+
+    let allApproved = [];
+    let pendingRequests = [];
+
+    // Load from localStorage
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key.startsWith("fees_") || key.startsWith("bonafide_")) {
+        const data = JSON.parse(localStorage.getItem(key));
+        const type = key.startsWith("fees_") ? "Fees Structure" : "Bonafide Certificate";
+        const request = {
+          name: data.name || "N/A",
+          roll: data.roll || "N/A",
+          dept: data.dept || "N/A",
+          year: data.year || "N/A",
+          totalFees: data.totalFees || null,
+          type: type,
+          key: key,
+          approved: data.approved || false,
+          approvalDate: data.approvalDate || null,
+          approvalTime: data.approvalTime || null
+        };
+
+        if (request.approved) {
+          allApproved.push(request);
+        } else {
+          pendingRequests.push(request);
+        }
+      }
+    }
+
+    function displayPending() {
+      if (pendingRequests.length === 0) {
+        pendingContainer.innerHTML = `<p class="no-requests">No pending requests.</p>`;
+        return;
+      }
+
+      pendingRequests.forEach(req => {
+        const div = document.createElement("div");
+        div.className = "request";
+        div.innerHTML = `
+          <p><strong>Type:</strong> ${req.type}</p>
+          <p><strong>Name:</strong> ${req.name}</p>
+          <p><strong>Roll No:</strong> ${req.roll}</p>
+          <p><strong>Department:</strong> ${req.dept}</p>
+          <p><strong>Year:</strong> ${req.year}</p>
+          ${req.totalFees ? `<p><strong>Total Fees:</strong> ₹${req.totalFees}</p>` : ""}
+          <button class="approve-btn" onclick="approveRequest('${req.key}')">Approve</button>
+        `;
+        pendingContainer.appendChild(div);
+      });
+    }
+
+    function displayApproved(list) {
+      approvedContainer.innerHTML = "";
+
+      if (list.length === 0) {
+        approvedContainer.innerHTML = `<p class="no-requests">No approved records.</p>`;
+        return;
+      }
+
+      list.forEach(req => {
+        const div = document.createElement("div");
+        div.className = "request";
+        div.innerHTML = `
+          <p><strong>Type:</strong> ${req.type}</p>
+          <p><strong>Name:</strong> ${req.name}</p>
+          <p><strong>Roll No:</strong> ${req.roll}</p>
+          <p><strong>Department:</strong> ${req.dept}</p>
+          <p><strong>Year:</strong> ${req.year}</p>
+          ${req.totalFees ? `<p><strong>Total Fees:</strong> ₹${req.totalFees}</p>` : ""}
+          <p><strong>Approved On:</strong> ${req.approvalDate} at ${req.approvalTime}</p>
+        `;
+        approvedContainer.appendChild(div);
+      });
+    }
+
+    function approveRequest(key) {
+      const data = JSON.parse(localStorage.getItem(key));
+      if (!data) return;
+
+      const now = new Date();
+      const approvalDate = now.toLocaleDateString("en-US", {
+        year: "numeric", month: "long", day: "numeric"
+      });
+      const approvalTime = now.toLocaleTimeString("en-US", {
+        hour: "2-digit", minute: "2-digit"
+      });
+
+      data.approved = true;
+      data.approvalDate = approvalDate;
+      data.approvalTime = approvalTime;
+
+      localStorage.setItem(key, JSON.stringify(data));
+      alert(`Approved ${data.name}'s request.`);
+      location.reload();
+    }
+
+    function filterByDate() {
+      const input = document.getElementById("filter-date").value;
+      if (!input) {
+        displayApproved(allApproved);
+        return;
+      }
+
+      const formattedDate = new Date(input).toLocaleDateString("en-US", {
+        year: "numeric", month: "long", day: "numeric"
+      });
+
+      const filtered = allApproved.filter(r => r.approvalDate === formattedDate);
+      displayApproved(filtered);
+    }
+
+    function downloadPDF() {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      let y = 10;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(16);
+      doc.text("SJIT - Approved Records", 60, y);
+      y += 10;
+
+      allApproved.forEach((req, idx) => {
+        y += 10;
+        doc.setFont("helvetica", "normal");
+        doc.setFontSize(12);
+        doc.text(`${idx + 1}) ${req.type}`, 10, y);
+        y += 6;
+        doc.text(`Name: ${req.name} | Roll: ${req.roll}`, 10, y);
+        y += 6;
+        doc.text(`Dept: ${req.dept}, Year: ${req.year}`, 10, y);
+        if (req.totalFees) {
+          y += 6;
+          doc.text(`Total Fees: ₹${req.totalFees}`, 10, y);
+        }
+        y += 6;
+        doc.text(`Approved On: ${req.approvalDate} at ${req.approvalTime}`, 10, y);
+        doc.line(10, y + 2, 200, y + 2);
+      });
+
+      doc.save("Approved_Requests.pdf");
+    }
+
+    // Init
+    displayPending();
+    displayApproved(allApproved);
+  </script>
+</body>
+</html>
