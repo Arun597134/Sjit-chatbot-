@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>SJIT Bonafide Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@latest/dist/vanta.net.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap" rel="stylesheet">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: 'Poppins', sans-serif;
+      color: white;
+    }
+
+    #vanta-bg {
+      width: 100%;
+      height: 100vh;
+      position: fixed;
+      z-index: -1;
+    }
+
+    #bonafideForm {
+      background: rgba(0, 0, 0, 0.85);
+      padding: 30px;
+      border-radius: 12px;
+      width: 90%;
+      max-width: 420px;
+      margin: auto;
+      margin-top: 60px;
+      box-shadow: 0 0 20px #4682b4;
+    }
+
+    #bonafideForm h2 {
+      text-align: center;
+      color: #4fc3f7;
+      margin-bottom: 20px;
+    }
+
+    #bonafideForm input {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 6px;
+      background: #222;
+      color: white;
+      font-size: 14px;
+    }
+
+    #bonafideForm button {
+      width: 100%;
+      padding: 12px;
+      background: #4682b4;
+      color: white;
+      font-weight: bold;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      margin-top: 15px;
+      font-size: 15px;
+    }
+
+    #bonafideForm button:hover {
+      background: #5fa4d8;
+    }
+
+    #notification {
+      margin-top: 15px;
+      background: #2e7d32;
+      padding: 10px;
+      border-radius: 8px;
+      display: none;
+      text-align: center;
+      font-size: 14px;
+    }
+
+    #notification button {
+      margin-top: 10px;
+      background: #1b5e20;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="vanta-bg"></div>
+
+  <div id="bonafideForm">
+    <h2>Bonafide Certificate Generator</h2>
+    <input type="text" id="bfName" placeholder="Full Name" required>
+    <input type="text" id="bfRoll" placeholder="Roll Number" required>
+    <input type="text" id="bfDept" placeholder="Department" required>
+    <input type="text" id="bfYear" placeholder="Year (e.g., III Year)" required>
+    <input type="text" id="bfPurpose" placeholder="Purpose" required>
+    <button onclick="submitBonafideRequest()">Submit Request</button>
+
+    <div id="notification">
+      ✅ Bonafide Approved!<br>
+      <button onclick="generateBonafide()">Download Certificate</button>
+    </div>
+  </div>
+
+  <script>
+    VANTA.NET({
+      el: "#vanta-bg",
+      mouseControls: true,
+      touchControls: true,
+      gyroControls: false,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.00,
+      scaleMobile: 1.00,
+      color: 0x33ccff,
+      backgroundColor: 0x000000,
+      points: 10.00,
+      maxDistance: 20.00,
+      spacing: 15.00
+    });
+
+    function submitBonafideRequest() {
+      const name = document.getElementById('bfName').value;
+      const roll = document.getElementById('bfRoll').value;
+      const dept = document.getElementById('bfDept').value;
+      const year = document.getElementById('bfYear').value;
+      const purpose = document.getElementById('bfPurpose').value;
+
+      if (!name || !roll || !dept || !year || !purpose) {
+        alert("Please fill all fields.");
+        return;
+      }
+
+      const request = {
+        name,
+        roll,
+        dept,
+        year,
+        purpose,
+        approved: false,
+        source: "bonafide.html"
+      };
+
+      localStorage.setItem(`bonafide_${roll}`, JSON.stringify(request));
+      alert("Request submitted successfully! Wait for staff approval.");
+      checkApprovalStatus();
+    }
+
+    function checkApprovalStatus() {
+      const roll = document.getElementById('bfRoll').value;
+      const stored = localStorage.getItem(`bonafide_${roll}`);
+      if (!stored) return;
+
+      const data = JSON.parse(stored);
+      document.getElementById("notification").style.display = data.approved ? "block" : "none";
+    }
+
+    async function generateBonafide() {
+      const roll = document.getElementById('bfRoll').value;
+      const data = JSON.parse(localStorage.getItem(`bonafide_${roll}`));
+      if (!data || !data.approved) {
+        alert("Bonafide not yet approved.");
+        return;
+      }
+
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      const today = new Date().toLocaleDateString('en-GB');
+
+      // Border
+      doc.setDrawColor(70, 130, 180);
+      doc.setLineWidth(1.5);
+      doc.rect(10, 10, pageWidth - 20, pageHeight - 20, 'S');
+
+      // Header
+      doc.setTextColor(0);
+      doc.setFont("Times", "Bold");
+      doc.setFontSize(16);
+      doc.text("ST. JOSEPH'S INSTITUTE OF TECHNOLOGY", pageWidth / 2, 30, { align: "center" });
+      doc.setFontSize(12);
+      doc.setFont("Times", "Normal");
+      doc.text("OMR, Chennai – 600119", pageWidth / 2, 38, { align: "center" });
+
+      // Header bar
+      doc.setFillColor(70, 130, 180);
+      doc.rect(10, 45, pageWidth - 20, 10, 'F');
+      doc.setTextColor(255, 255, 255);
+      doc.setFont("Times", "Bold");
+      doc.setFontSize(14);
+      doc.text("BONAFIDE CERTIFICATE", pageWidth / 2, 52, { align: "center" });
+
+      // Certificate content
+      doc.setTextColor(0, 0, 0);
+      doc.setFont("Times", "Normal");
+      doc.setFontSize(13);
+      let y = 80;
+
+      const lines = [
+        `This is to certify that Mr./Ms. ${data.name}, Roll No: ${data.roll},`,
+        `is a bonafide student of the Department of ${data.dept}, currently studying in ${data.year}.`,
+      ];
+
+      for (let line of lines) {
+        doc.text(line, pageWidth / 2, y, { align: "center" });
+        y += 10;
+      }
+
+      doc.setFont("Times", "Italic");
+      doc.text("This certificate is issued for the purpose of", pageWidth / 2, y + 10, { align: "center" });
+      doc.text(`${data.purpose}.`, pageWidth / 2, y + 20, { align: "center" });
+
+      // Footer
+      doc.setFont("Times", "Normal");
+      doc.setFontSize(12);
+      doc.text(`Date: ${today}`, 25, pageHeight - 60);
+      doc.text("Signature of the Principal", pageWidth - 70, pageHeight - 30);
+
+      doc.setFontSize(10);
+      doc.setTextColor(100);
+      doc.text("This is a system-generated certificate and does not require a seal.", pageWidth / 2, pageHeight - 15, { align: "center" });
+
+      // QR Code
+      const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(data.roll)}`;
+      const img = new Image();
+      img.crossOrigin = "Anonymous";
+      img.src = qrURL;
+
+      img.onload = function () {
+        doc.addImage(img, 'PNG', 30, pageHeight - 50, 30, 30);
+        doc.save(`Bonafide_${data.roll}.pdf`);
+      };
+
+      img.onerror = function () {
+        alert("Failed to load QR Code.");
+      };
+    }
+
+    window.onload = () => {
+      const rollInput = document.getElementById('bfRoll');
+      rollInput.addEventListener("input", checkApprovalStatus);
+    };
+  </script>
+</body>
+</html>
