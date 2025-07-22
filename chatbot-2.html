@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SJIT Chatbot – Autonomous</title>
+
+  <!-- Vanta Background -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.net.min.js"></script>
+
+  <!-- Fonts -->
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&family=Poppins:wght@300;500&display=swap" rel="stylesheet">
+
+  <style>
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Poppins', sans-serif; background-color: #000; }
+
+    #particles-bg { position:absolute; top:0; left:0; width:100%; height:100%; z-index:1; }
+
+    #chat-wrapper {
+      position: relative;
+      z-index: 5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    #chat-container {
+      background: rgba(20,20,20,0.95);
+      border-radius: 15px;
+      width: 90%; max-width: 500px;
+      height: 85vh;
+      display: flex; flex-direction: column;
+      box-shadow: 0 0 20px #00aaff;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      padding: 15px;
+      background: #00aaff;
+      color: #fff;
+      font-size: 1.2rem;
+      text-align: center;
+    }
+
+    .chat-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .bubble {
+      max-width: 80%;
+      padding: 10px 15px;
+      border-radius: 15px;
+      position: relative;
+      line-height: 1.4;
+      word-wrap: break-word;
+    }
+
+    .user { align-self: flex-end; background: #00aaff; color: #fff; }
+    .bot { align-self: flex-start; background: #333; color: #aadfff; }
+
+    .chat-input {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #444;
+    }
+
+    .chat-input input {
+      flex: 1;
+      padding: 10px;
+      background: #111;
+      border: none;
+      color: #fff;
+      border-radius: 8px 0 0 8px;
+    }
+
+    .chat-input button {
+      padding: 10px 20px;
+      background: #00aaff;
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      border-radius: 0 8px 8px 0;
+    }
+
+    a { color: #4fc3f7; text-decoration: underline; }
+
+    .chat-area::-webkit-scrollbar { width: 6px; }
+    .chat-area::-webkit-scrollbar-thumb { background: #00aaff; border-radius: 3px; }
+  </style>
+</head>
+<body>
+
+  <div id="particles-bg"></div>
+
+  <div id="chat-wrapper">
+    <div id="chat-container">
+      <div class="chat-header">SJIT Chatbot</div>
+      <div class="chat-area" id="chat-area">
+        <div class="bubble bot">Hi! I'm your SJIT assistant. Ask me anything 😊</div>
+      </div>
+      <div class="chat-input">
+        <input type="text" id="user-input" placeholder="Type your question..."/>
+        <button id="send-btn">Send</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    VANTA.NET({
+      el: "#particles-bg",
+      mouseControls: true,
+      touchControls: true,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.0,
+      scaleMobile: 1.0,
+      color: 0x00aaff,
+      backgroundColor: 0x000000,
+      points: 10.0,
+      maxDistance: 20.0,
+      spacing: 15.0
+    });
+
+    const chatArea = document.getElementById("chat-area");
+
+    const notes = {
+      "cse": "📚 <a href='https://drive.google.com/drive/folders/your-cse-folder-id' target='_blank'>Open CSE Notes</a>",
+      "it": "📚 <a href='https://drive.google.com/drive/folders/your-it-folder-id' target='_blank'>Open IT Notes</a>",
+      "ece": "📚 <a href='https://drive.google.com/drive/folders/your-ece-folder-id' target='_blank'>Open ECE Notes</a>",
+      "mech": "📚 <a href='https://drive.google.com/drive/folders/your-mech-folder-id' target='_blank'>Open Mechanical Notes</a>",
+      "ai&ds": "📚 <a href='https://drive.google.com/drive/folders/your-aids-folder-id' target='_blank'>Open AI & DS Notes</a>",
+      "ads": "📚 <a href='https://drive.google.com/drive/folders/your-aids-folder-id' target='_blank'>Open AI & DS Notes</a>",
+      "eee": "📚 <a href='https://drive.google.com/drive/folders/your-eee-folder-id' target='_blank'>Open EEE Notes</a>",
+      "mba": "📚 <a href='https://drive.google.com/drive/folders/your-mba-folder-id' target='_blank'>Open MBA Notes</a>"
+    };
+
+    const forms = {
+      "leave form": "📄 <a href='forms/leave.pdf' target='_blank'>Download Leave Form</a>",
+      "od form": "📄 <a href='forms/od.pdf' target='_blank'>Download OD Form</a>",
+      "repeat test form": "📄 <a href='forms/repeattest.pdf' target='_blank'>Download Repeat Test Form</a>",
+      "project progress report": "📄 <a href='forms/project_report.pdf' target='_blank'>Download Project Progress Report</a>",
+      "implant training evaluation": "📄 <a href='forms/implant_training.pdf' target='_blank'>Download Implant Training Evaluation Form</a>",
+      "joint declaration": `
+        📄 <a href='forms/joint_declaration_bec.pdf' target='_blank'>Joint Declaration Form for BEC</a><br>
+        📄 <a href='forms/joint_declaration.pdf' target='_blank'>Joint Declaration Form</a><br>
+        📄 <a href='forms/staff_declaration.pdf' target='_blank'>Staff Declaration Form</a><br>
+        📄 <a href='forms/joint_declaration_verification.pdf' target='_blank'>Joint Declaration Verification Report</a>
+      `,
+      "disciplinary committee": "📄 <a href='forms/disciplinary_committee.pdf' target='_blank'>Download Disciplinary Committee Form</a>",
+      "abhs": `
+        📄 <a href='forms/abhs_registration.pdf' target='_blank'>ABHS Registration Form</a><br>
+        📄 <a href='forms/abhs_recommendation.pdf' target='_blank'>ABHS Recommendation Form</a><br>
+        📄 <a href='forms/abhs_recommendation_form1.pdf' target='_blank'>ABHS Recommendation Form 1</a>
+      `,
+      "placement training": "📄 <a href='forms/placement_training.pdf' target='_blank'>Download Placement Training Form</a>",
+      "sports form": `
+        📄 <a href='forms/sports_od.pdf' target='_blank'>Sports OD Form</a><br>
+        📄 <a href='forms/sports_form.pdf' target='_blank'>Sports Form</a>
+      `,
+      "iv form": "📄 <a href='forms/industrial_visit.pdf' target='_blank'>Download Industrial Visit Form</a>",
+      "feedback form": "📄 <a href='forms/feedback_form.pdf' target='_blank'>Download Feedback Form</a>",
+      "itenary form": "📄 <a href='forms/itenary.pdf' target='_blank'>Download Itenary Form</a>"
+    };
+
+    let waitingForDept = false;
+
+    function appendBubble(text, cls) {
+      const b = document.createElement("div");
+      b.className = `bubble ${cls}`;
+      if (text.includes("<a ")) {
+        b.innerHTML = text;
+      } else {
+        let i = 0;
+        function type() {
+          if (i < text.length) {
+            b.innerHTML += text.charAt(i++);
+            setTimeout(type, 20);
+          }
+        }
+        type();
+      }
+      chatArea.appendChild(b);
+      chatArea.scrollTop = chatArea.scrollHeight;
+    }
+
+    function getResponse(msg) {
+      const lower = msg.toLowerCase();
+
+      // Notes
+      if (waitingForDept) {
+        waitingForDept = false;
+        return notes[lower] || "Sorry, I don't have notes for that department.";
+      }
+      if (lower.includes("notes")) {
+        waitingForDept = true;
+        return "Please choose a department: CSE, IT, ECE, MECH, ADS, EEE , MBA 📘";
+      }
+
+      // Forms
+      for (const key in forms) {
+        if (lower.includes(key)) return forms[key];
+      }
+
+      // 💡 Bonafide trigger
+      if (lower.includes("bonafide")) {
+        return `📄 <a href='bonafide.html' target='_blank'>Click here to generate Bonafide Certificate</a>`;
+      }
+      // ✅ Fees structure trigger
+      if (lower.includes("fees receipt") || lower.includes("fee details") || lower.includes("tuition fees")) {
+        return "📄 <a href='Feesstructure.html' target='_blank'> Fees Receipt generator</a>";
+      }
+
+      // Info
+      if (lower.includes("where") || lower.includes("located"))
+        return "📍 SJIT is located at OMR, near Sholinganallur, Chennai - 600119.";
+      if (lower.includes("canteen") || lower.includes("food"))
+        return "🍽️ SJIT canteen offers hygienic, affordable South & North Indian food options.";
+      if (lower.includes("hostel"))
+        return "🏠 Secure hostels for boys & girls with Wi-Fi, mess, laundry & recreation.";
+      if (lower.includes("sports") || lower.includes("playground"))
+        return "🏏 SJIT provides basketball, cricket, volleyball, football grounds and indoor games.";
+      if (lower.includes("library"))
+        return "📖 SJIT Library has access to thousands of books, journals and a digital library.";
+      if (lower.includes("transport") || lower.includes("bus"))
+        return "🚌 College buses cover major parts of Chennai. Affordable & safe.";
+      if (lower.includes("fest") || lower.includes("cultural"))
+        return "🎉 Our annual fest 'SYNCRO' blends tech shows, culturals, fun games & food stalls.";
+      if (lower.includes("placement") || lower.includes("job"))
+        return "💼 Our top recruiters include TCS, Infosys, Wipro, Zoho, Accenture & more!";
+      if (lower.includes("code") || lower.includes("tnea"))
+        return "🎓 Our TNEA counseling code is <strong>1312</strong>.";
+
+      return "I can help with SJIT info! Ask about forms, notes, departments, events or facilities.";
+    }
+
+    function sendMessage() {
+      const input = document.getElementById("user-input");
+      const msg = input.value.trim();
+      if (!msg) return;
+      appendBubble(msg, "user");
+      input.value = "";
+
+      const reply = getResponse(msg);
+      setTimeout(() => appendBubble(reply, "bot"), 500);
+    }
+
+    document.getElementById("send-btn").addEventListener("click", sendMessage);
+    document.getElementById("user-input").addEventListener("keypress", e => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>
