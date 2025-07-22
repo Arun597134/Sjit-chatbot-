@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SJIT Login / Signup</title>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins&display=swap" rel="stylesheet"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+    html, body { height: 100%; width: 100%; overflow: hidden; }
+
+    #vanta-bg {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      top: 0;
+      left: 0;
+      z-index: -1;
+      background: #000428; /* fallback background */
+    }
+
+    .container {
+      width: 400px;
+      height: 550px;
+      background: rgba(0, 0, 0, 0.85);
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 0 20px #1e90ff;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+
+    .form-container {
+      display: flex;
+      width: 300%;
+      height: 100%;
+      transition: transform 0.5s ease-in-out;
+    }
+
+    form {
+      width: 100%;
+      padding: 30px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    form h2 {
+      color: #1e90ff;
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    input {
+      padding: 12px;
+      margin: 8px 0;
+      border: none;
+      border-radius: 8px;
+      background: #333;
+      color: white;
+    }
+
+    button {
+      padding: 12px;
+      border: none;
+      background: #1e90ff;
+      color: white;
+      border-radius: 8px;
+      margin-top: 15px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: background 0.3s ease;
+    }
+
+    button:hover {
+      background: #1c7ed6;
+    }
+
+    .toggle-btns {
+      position: absolute;
+      top: 15px;
+      left: 0;
+      width: 100%;
+      display: flex;
+      justify-content: space-around;
+      z-index: 10;
+    }
+
+    .toggle-btns button {
+      background: transparent;
+      color: white;
+      border: none;
+      font-size: 16px;
+      cursor: pointer;
+      border-bottom: 2px solid transparent;
+    }
+
+    .toggle-btns button.active {
+      border-color: #1e90ff;
+      color: #1e90ff;
+    }
+
+    .message {
+      color: lightgreen;
+      text-align: center;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .link {
+      color: #1e90ff;
+      text-align: right;
+      font-size: 14px;
+      margin-top: 5px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div id="vanta-bg"></div>
+
+<div class="container">
+  <div class="toggle-btns">
+    <button id="loginToggle" class="active">Login</button>
+    <button id="signupToggle">Signup</button>
+    <button id="forgotToggle">Forgot</button>
+  </div>
+
+  <div class="form-container" id="formContainer">
+    <!-- Login Form -->
+    <form id="loginForm">
+      <h2>Login</h2>
+      <input type="text" id="loginRoll" placeholder="Roll Number / Staff ID" required />
+      <input type="password" id="loginPass" placeholder="Password" required />
+      <div class="link" onclick="switchToForgot()">Forgot password?</div>
+      <button type="submit">Login</button>
+      <div class="message" id="loginMsg"></div>
+    </form>
+
+    <!-- Signup Form -->
+    <form id="signupForm">
+      <h2>Signup</h2>
+      <input type="text" id="rollNo" placeholder="Roll No (e.g. 23AD1243 / STAFF001)" required />
+      <input type="password" id="password" placeholder="Create Password" required />
+      <input type="password" id="confirmPassword" placeholder="Confirm Password" required />
+      <input type="tel" id="mobile" placeholder="Mobile Number" required />
+      <input type="email" id="email" placeholder="Email" required />
+      <button type="submit">Signup</button>
+      <div class="message" id="signupMsg"></div>
+    </form>
+
+    <!-- Forgot Password Form -->
+    <form id="forgotForm">
+      <h2>Reset Password</h2>
+      <input type="text" id="resetInput" placeholder="Enter Mobile or Email" required />
+      <button type="submit">Send Reset Password</button>
+      <div class="message" id="resetMsg"></div>
+    </form>
+  </div>
+</div>
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const formContainer = document.getElementById('formContainer');
+    const loginToggle = document.getElementById('loginToggle');
+    const signupToggle = document.getElementById('signupToggle');
+    const forgotToggle = document.getElementById('forgotToggle');
+
+    const loginForm = document.getElementById('loginForm');
+    const signupForm = document.getElementById('signupForm');
+    const forgotForm = document.getElementById('forgotForm');
+
+    const signupMsg = document.getElementById('signupMsg');
+    const loginMsg = document.getElementById('loginMsg');
+    const resetMsg = document.getElementById('resetMsg');
+
+    // Toggle forms
+    loginToggle.onclick = () => {
+      formContainer.style.transform = "translateX(0%)";
+      loginToggle.classList.add("active");
+      signupToggle.classList.remove("active");
+      forgotToggle.classList.remove("active");
+    };
+
+    signupToggle.onclick = () => {
+      formContainer.style.transform = "translateX(-33.33%)";
+      signupToggle.classList.add("active");
+      loginToggle.classList.remove("active");
+      forgotToggle.classList.remove("active");
+    };
+
+    forgotToggle.onclick = () => {
+      formContainer.style.transform = "translateX(-66.66%)";
+      forgotToggle.classList.add("active");
+      loginToggle.classList.remove("active");
+      signupToggle.classList.remove("active");
+    };
+
+    window.switchToForgot = () => forgotToggle.click();
+
+    function isStaffRoll(roll) {
+      return /^STAFF[0-9]{3}$/i.test(roll);
+    }
+
+    function isStudentRoll(roll) {
+      return /^[0-9]{2}[A-Z]{2}[0-9]{4}$/i.test(roll);
+    }
+
+    // Signup
+    signupForm.onsubmit = function (e) {
+      e.preventDefault();
+      const roll = document.getElementById("rollNo").value.trim().toUpperCase();
+      const pass = document.getElementById("password").value;
+      const confirm = document.getElementById("confirmPassword").value;
+      const mobile = document.getElementById("mobile").value.trim();
+      const email = document.getElementById("email").value.trim();
+
+      if (pass !== confirm) {
+        signupMsg.textContent = "❌ Passwords do not match.";
+        return;
+      }
+
+      let userType = "";
+      if (isStudentRoll(roll)) {
+        userType = "student";
+      } else if (isStaffRoll(roll)) {
+        userType = "staff";
+      } else {
+        signupMsg.textContent = "❌ Invalid Roll No / Staff ID.";
+        return;
+      }
+
+      const user = { roll, password: pass, mobile, email, userType };
+      localStorage.setItem(roll, JSON.stringify(user));
+
+      signupMsg.textContent = "✅ Signup successful! Redirecting...";
+      setTimeout(() => {
+        loginToggle.click();
+        signupMsg.textContent = '';
+      }, 1500);
+    };
+
+    // Login
+    loginForm.onsubmit = function (e) {
+      e.preventDefault();
+      const roll = document.getElementById("loginRoll").value.trim().toUpperCase();
+      const pass = document.getElementById("loginPass").value;
+
+      const storedUser = JSON.parse(localStorage.getItem(roll));
+      if (!storedUser || storedUser.password !== pass) {
+        loginMsg.textContent = "❌ Invalid credentials.";
+        return;
+      }
+
+      loginMsg.textContent = "✅ Login successful!";
+      setTimeout(() => {
+        if (storedUser.userType === "staff") {
+          window.location.href = "staff-dashboard.html";
+        } else {
+          window.location.href = "chatbot-2.html";
+        }
+      }, 1000);
+    };
+
+    // Forgot Password
+    forgotForm.onsubmit = function (e) {
+      e.preventDefault();
+      const input = document.getElementById("resetInput").value.trim();
+      let found = false;
+
+      for (let i = 0; i < localStorage.length; i++) {
+        const key = localStorage.key(i);
+        const user = JSON.parse(localStorage.getItem(key));
+        if (user && (user.email === input || user.mobile === input)) {
+          const newPass = Math.random().toString(36).slice(-8);
+          user.password = newPass;
+          localStorage.setItem(key, JSON.stringify(user));
+          resetMsg.textContent = `✅ Reset password: ${newPass}`;
+          found = true;
+          break;
+        }
+      }
+
+      if (!found) {
+        resetMsg.textContent = "❌ No matching account found.";
+      }
+    };
+  });
+</script>
+
+</body>
+</html>
