@@ -1,0 +1,52 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>SJIT Chatbot – Welcome</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r121/three.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/vanta@0.5.24/dist/vanta.globe.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Electrolize&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; width: 100%; overflow: hidden; font-family: 'Electrolize', sans-serif; background-color: #000; }
+    #intro {
+      position: fixed; width:100%; height:100%;
+      display: flex; justify-content: center; align-items: center;
+      z-index: 10; color: #fff; text-align: center;
+    }
+    #intro h1 { font-size: 3rem; margin-bottom: 0.5rem; color: #00aaff; }
+    #intro p { font-size: 1.2rem; color: #aadfff; }
+  </style>
+</head>
+<body>
+  <div id="intro">
+    <div>
+      <h1>SJIT Chatbot</h1>
+      <p>You choose, we do it, we make you shine.</p>
+    </div>
+  </div>
+
+  <script>
+    VANTA.GLOBE({
+      el: "#intro",
+      mouseControls: true,
+      touchControls: true,
+      minHeight: 200.00,
+      minWidth: 200.00,
+      scale: 1.0,
+      scaleMobile: 1.0,
+      color: 0x00aaff,
+      color2: 0x002244,
+      backgroundColor: 0x000000,
+      size: 1.2
+    });
+
+    // Redirect to chatbot.html after 4 seconds
+    setTimeout(() => {
+      window.location.href = "Logu.html";
+    }, 4000);
+  </script>
+</body>
+</html>
